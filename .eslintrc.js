@@ -20,8 +20,9 @@ module.exports = {
         "react"
     ],
     "rules": {
+        "semi": ["error", "always"]
     },
     "ignorePatterns": [
         "**/node_modules/**"
     ]
-}
+};
