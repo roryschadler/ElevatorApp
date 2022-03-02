@@ -5,4 +5,4 @@ ENV PATH /app/node_modules/.bin:$PATH
 COPY ./package.json .
 RUN npm install --loglevel verbose
 COPY . .
-ENTRYPOINT [ "npm", "start" ]
+ENTRYPOINT [ "react-scripts", "start" ]
