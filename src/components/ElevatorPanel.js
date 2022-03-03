@@ -1,10 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Grid from '@mui/material/Grid';
+import Stack from '@mui/material/Stack';
 
 import ElevatorButton from './ElevatorButton';
-
-const MAXPANELHEIGHT = 4;
 
 class ElevatorPanel extends React.Component {
   constructor(props) {
@@ -18,58 +17,58 @@ class ElevatorPanel extends React.Component {
     ]).isRequired,
     noText: PropTypes.bool,
     text: PropTypes.string,
-    reverse: PropTypes.bool
+    reverse: PropTypes.bool,
   };
 
   static defaultProps = {
     noText: false,
-    reverse: false
+    reverse: false,
   };
 
   splitColumns(children) {
     const resultColumns = [];
     if (Array.isArray(children)) {
-      for (let i = 0; i < children.length; i += MAXPANELHEIGHT) {
-        resultColumns.push(children.slice(i, i + MAXPANELHEIGHT));
+      const chunkSize =
+        children.length > 4 ? Math.ceil(Math.sqrt(children.length)) : 4;
+      for (let floor = 0; floor < children.length; floor += chunkSize) {
+        resultColumns.push(children.slice(floor, floor + chunkSize));
       }
     } else {
       resultColumns.push(children);
     }
     return resultColumns.map((item, index) => (
-      <Grid
-        container
-        item
-        direction={this.props.reverse ? 'column-reverse' : 'column'}
-        spacing={1}
-        xs={Math.floor(12 / resultColumns.length)}
-        key={`col${index}`}
-      >
-        {item}
+      <Grid item key={`col${index}`}>
+        <Stack
+          direction={this.props.reverse ? 'column-reverse' : 'column'}
+          spacing={1}
+          alignItems='center'
+          justifyContent='center'
+        >
+          {item}
+        </Stack>
       </Grid>
     ));
   }
 
   render() {
     const textItem = !this.props.noText ? (
-      <Grid item xs={12}>{this.props.text}</Grid>
+      <Grid item sx={{ textAlign: 'center' }}>
+        {this.props.text}
+      </Grid>
     ) : null;
 
-    const buttonColumns = this.splitColumns(this.props.children);
-    let buttons;
-    if (buttonColumns.length > 1) {
-      buttons = (
-        <Grid container item xs={12} spacing={2}>
-          {buttonColumns}
-        </Grid>
-      );
-    } else {
-      buttons = buttonColumns[0];
-    }
-
     return (
-      <Grid container alignItems='center'>
+      <Grid container spacing={1} direction='column'>
         {textItem}
-        {buttons}
+        <Grid
+          container
+          item
+          spacing={1}
+          alignItems='center'
+          justifyContent='center'
+        >
+          {this.splitColumns(this.props.children)}
+        </Grid>
       </Grid>
     );
   }
@@ -128,14 +127,18 @@ class CarPanel extends React.Component {
     this.floorCount = parseInt(this.props.floors) || 0;
   }
   static propTypes = {
-    floors: PropTypes.string.isRequired,
+    floors: PropTypes.arrayOf(PropTypes.string).isRequired,
   };
 
   render() {
-    const buttonList = Array.from({ length: this.floorCount }, (x, i) =>
-      i.toString()
-    ).map((i) => <ElevatorButton text={i} onClick={buttonClick(i)} key={i} />);
-    return <ElevatorPanel text='Elevator Car' reverse>{buttonList}</ElevatorPanel>;
+    const buttonList = this.props.floors.map((floor) => (
+      <ElevatorButton text={floor} onClick={buttonClick(floor)} key={floor} />
+    ));
+    return (
+      <ElevatorPanel text='Elevator Car' reverse>
+        {buttonList}
+      </ElevatorPanel>
+    );
   }
 }
 
