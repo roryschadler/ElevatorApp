@@ -1,8 +1,9 @@
-import React from "react";
-import PropTypes from "prop-types";
-import Fab from "@mui/material/Fab";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import React from 'react';
+import PropTypes from 'prop-types';
+import Grid from '@mui/material/Grid';
+import Fab from '@mui/material/Fab';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
 class ElevatorButton extends React.Component {
   constructor(props) {
@@ -21,17 +22,24 @@ class ElevatorButton extends React.Component {
 
   render() {
     let icon;
-    if (this.props.text === "up") {
+    if (this.props.text === 'up') {
       icon = <ArrowUpwardIcon></ArrowUpwardIcon>;
-    } else if (this.props.text === "down") {
+    } else if (this.props.text === 'down') {
       icon = <ArrowDownwardIcon></ArrowDownwardIcon>;
     } else {
       icon = <span>{this.props.text}</span>;
     }
     return (
-      <Fab color="secondary" sx={{ boxShadow: 3 }} aria-label={this.props.text} onClick={this.handleChange}>
-        {icon}
-      </Fab>
+      <Grid item>
+        <Fab
+          color='secondary'
+          sx={{ boxShadow: 3 }}
+          aria-label={this.props.text}
+          onClick={this.handleChange}
+        >
+          {icon}
+        </Fab>
+      </Grid>
     );
   }
 }
