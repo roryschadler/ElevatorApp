@@ -48,14 +48,14 @@ class FloorPanel extends React.Component {
       className: 'floor_panel',
     };
     const upButton = (
-      <ElevatorButton
-        onClick={this.props.onClick('up', this.props.floor)}
-      ><ArrowUpward /></ElevatorButton>
+      <ElevatorButton onClick={this.props.onClick('up', this.props.floor)}>
+        <ArrowUpward />
+      </ElevatorButton>
     );
     const downButton = (
-      <ElevatorButton
-        onClick={this.props.onClick('down', this.props.floor)}
-      ><ArrowDownward /></ElevatorButton>
+      <ElevatorButton onClick={this.props.onClick('down', this.props.floor)}>
+        <ArrowDownward />
+      </ElevatorButton>
     );
 
     // only one button for top, bottom

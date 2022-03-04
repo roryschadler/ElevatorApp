@@ -20,7 +20,7 @@ class ElevatorButton extends React.Component {
     /** Callback on button click */
     onClick: PropTypes.func.isRequired,
     /** Element to insert inside the button */
-    children: PropTypes.node.isRequired
+    children: PropTypes.node.isRequired,
   };
 
   render() {
@@ -30,11 +30,7 @@ class ElevatorButton extends React.Component {
     }
     return (
       <Grid item>
-        <Fab
-          color="primary"
-          sx={{ boxShadow: 3 }}
-          onClick={this.props.onClick}
-        >
+        <Fab color="primary" sx={{ boxShadow: 3 }} onClick={this.props.onClick}>
           {icon}
         </Fab>
       </Grid>

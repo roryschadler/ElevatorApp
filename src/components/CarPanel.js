@@ -43,13 +43,17 @@ class CarPanel extends React.Component {
   render() {
     // map given floors to buttons
     const buttonList = this.props.floors.map((floor) => (
-      <ElevatorButton
-        onClick={this.props.onClick(floor)}
-        key={floor}
-      >{floor}</ElevatorButton>
+      <ElevatorButton onClick={this.props.onClick(floor)} key={floor}>
+        {floor}
+      </ElevatorButton>
     ));
     return (
-      <ElevatorPanel text="Elevator Car" reverse noText={this.props.noText} className="car_panel">
+      <ElevatorPanel
+        text="Elevator Car"
+        reverse
+        noText={this.props.noText}
+        className="car_panel"
+      >
         {buttonList}
       </ElevatorPanel>
     );

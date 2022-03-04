@@ -59,7 +59,8 @@ class ElevatorDisplay extends React.Component {
       <CarPanel floors={this.props.floors} onClick={this.props.onClick} />
     );
 
-    if (this.props.value === 'all') { // full system display
+    if (this.props.value === 'all') {
+      // full system display
       return (
         <Grid
           container
@@ -78,9 +79,11 @@ class ElevatorDisplay extends React.Component {
           ))}
         </Grid>
       );
-    } else if (this.props.value === 'car') { // elevator car only
+    } else if (this.props.value === 'car') {
+      // elevator car only
       return carPanel;
-    } else { // floor panel only
+    } else {
+      // floor panel only
       return floorButtons[this.props.floors.indexOf(this.props.value)];
     }
   }
