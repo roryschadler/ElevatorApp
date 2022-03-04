@@ -1,7 +1,5 @@
-import './App.css';
 import React from 'react';
-import { ThemeProvider } from '@mui/system';
-import { Tabs, Tab, Grid } from '@mui/material';
+import { ThemeProvider, Tabs, Tab, Grid, CssBaseline } from '@mui/material';
 
 import theme from './theme';
 import ElevatorDisplay from './components/ElevatorDisplay';
@@ -23,6 +21,7 @@ class App extends React.Component {
   render() {
     return (
       <div className="App">
+        <CssBaseline />
         <ThemeProvider theme={theme}>
           <Grid container spacing={1}>
             <Grid item xs={12} sx={{ borderBottom: 1, borderColor: 'divider' }}>

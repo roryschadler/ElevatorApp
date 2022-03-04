@@ -2,7 +2,16 @@ import { createTheme } from "@mui/material";
 
 const theme = createTheme({
   typography: {
-    fontFamily: 'Roboto'
+    fontFamily: "Roboto"
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: `
+        @font-face {
+          font-family: 'Roboto';
+        }
+      `,
+    },
   },
   palette: {
     type: 'light',
