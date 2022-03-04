@@ -21,43 +21,37 @@ import ElevatorButton from './ElevatorButton';
  *   <CarPanel floors={floors} onClick={handleClick} />
  * );
  */
-class CarPanel extends React.Component {
-  constructor(props) {
-    super(props);
-    this.floorCount = parseInt(this.props.floors) || 0;
-  }
-  static propTypes = {
-    /** Array of string floor labels. */
-    floors: PropTypes.arrayOf(PropTypes.string).isRequired,
-    /** Callback on button click */
-    onClick: PropTypes.func.isRequired,
-    /** Pass if no label is desired */
-    noText: PropTypes.bool,
-  };
-
-  static defaultProps = {
-    /** Show label by default */
-    noText: false,
-  };
-
-  render() {
-    // map given floors to buttons
-    const buttonList = this.props.floors.map((floor) => (
-      <ElevatorButton onClick={this.props.onClick(floor)} key={floor}>
-        {floor}
-      </ElevatorButton>
-    ));
-    return (
-      <ElevatorPanel
-        text="Elevator Car"
-        reverse
-        noText={this.props.noText}
-        className="car_panel"
-      >
-        {buttonList}
-      </ElevatorPanel>
-    );
-  }
+function CarPanel({ floors, onClick, noText }) {
+  // map given floors to buttons
+  const buttonList = floors.map((floor) => (
+    <ElevatorButton onClick={onClick(floor)} key={floor}>
+      {floor}
+    </ElevatorButton>
+  ));
+  return (
+    <ElevatorPanel
+      text="Elevator Car"
+      reverse
+      noText={noText}
+      className="car_panel"
+    >
+      {buttonList}
+    </ElevatorPanel>
+  );
 }
+
+CarPanel.propTypes = {
+  /** Array of string floor labels. */
+  floors: PropTypes.arrayOf(PropTypes.string).isRequired,
+  /** Callback on button click */
+  onClick: PropTypes.func.isRequired,
+  /** Pass if no label is desired */
+  noText: PropTypes.bool,
+};
+
+CarPanel.defaultProps = {
+  /** Show label by default */
+  noText: false,
+};
 
 export default CarPanel;
