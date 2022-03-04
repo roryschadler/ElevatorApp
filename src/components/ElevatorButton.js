@@ -11,13 +11,14 @@ import { Fab } from '@mui/material';
  * @example
  * const handleClick = () => console.log('click');
  * const buttonText = 6;
+ * const buttonSize = 64;
  * return (
- *   <ElevatorButton onClick={handleClick}>{buttonText}</ElevatorButton>
+ *   <ElevatorButton onClick={handleClick} buttonSize={buttonSize}>{buttonText}</ElevatorButton>
  * );
  */
-function ElevatorButton({ onClick, children }) {
+function ElevatorButton({ onClick, buttonSize, children }) {
   return (
-    <Fab color="primary" sx={{ boxShadow: 3 }} onClick={onClick}>
+    <Fab color="primary" sx={{ boxShadow: 3, height: buttonSize, width: buttonSize }} onClick={onClick}>
       {children}
     </Fab>
   );
@@ -28,6 +29,8 @@ ElevatorButton.propTypes = {
   onClick: PropTypes.func.isRequired,
   /** Element to insert inside the button */
   children: PropTypes.node.isRequired,
+  /** Button size */
+  buttonSize: PropTypes.number.isRequired,
 };
 
 export default ElevatorButton;

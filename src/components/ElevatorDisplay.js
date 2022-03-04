@@ -34,6 +34,7 @@ class ElevatorDisplay extends React.Component {
       },
       ledger: [],
     };
+    this.buttonSize = 64;
   }
   static propTypes = {
     /** Current tab value */
@@ -82,6 +83,7 @@ class ElevatorDisplay extends React.Component {
             location={location || ''}
             floor={floor}
             onClick={this.handleElevatorRequest}
+            buttonSize={this.buttonSize}
           ></FloorPanel>
         );
       },
@@ -89,7 +91,11 @@ class ElevatorDisplay extends React.Component {
     );
 
     const carPanel = (
-      <CarPanel floors={this.props.floors} onClick={this.handleElevatorRequest} />
+      <CarPanel
+        floors={this.props.floors}
+        onClick={this.handleElevatorRequest}
+        buttonSize={this.buttonSize}
+      />
     );
 
     if (this.props.value === 'all') {
@@ -97,16 +103,15 @@ class ElevatorDisplay extends React.Component {
       return (
         <Grid
           container
-          columns={{ xs: 4, sm: 8, md: 12 }}
-          spacing={{ xs: 2, md: 3 }}
-          alignItems="stretch"
+          columns={{ xs: 4, sm: 8, md: 12, lg: 12 }}
+          spacing={{ xs: 1, md: 3 }}
         >
-          <Grid item xs={2} sm={4} md={4}>
+          <Grid xs={3} item>
             {carPanel}
           </Grid>
 
           {floorButtons.map((button, index) => (
-            <Grid item xs={1} sm={2} md={2} key={index}>
+            <Grid item xs key={index}>
               {button}
             </Grid>
           ))}

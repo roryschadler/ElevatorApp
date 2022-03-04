@@ -17,14 +17,19 @@ import ElevatorButton from './ElevatorButton';
  * @example
  * const handleClick = () => console.log('click');
  * const floors = ['L', '1', '2'];
+ * const buttonSize = 64;
  * return (
- *   <CarPanel floors={floors} onClick={handleClick} />
+ *   <CarPanel floors={floors} onClick={handleClick} buttonSize={buttonSize}/>
  * );
  */
-function CarPanel({ floors, onClick, noText }) {
+function CarPanel({ floors, onClick, noText, buttonSize }) {
   // map given floors to buttons
   const buttonList = floors.map((floor) => (
-    <ElevatorButton onClick={onClick(floor)} key={floor}>
+    <ElevatorButton
+      onClick={onClick(floor)}
+      key={floor}
+      buttonSize={buttonSize}
+    >
       {floor}
     </ElevatorButton>
   ));
@@ -34,6 +39,7 @@ function CarPanel({ floors, onClick, noText }) {
       reverse
       noText={noText}
       className="car_panel"
+      buttonSize={buttonSize}
     >
       {buttonList}
     </ElevatorPanel>
@@ -47,6 +53,8 @@ CarPanel.propTypes = {
   onClick: PropTypes.func.isRequired,
   /** Pass if no label is desired */
   noText: PropTypes.bool,
+  /** Button size for appropriate panel sizing */
+  buttonSize: PropTypes.number.isRequired,
 };
 
 CarPanel.defaultProps = {

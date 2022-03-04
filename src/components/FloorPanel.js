@@ -20,23 +20,25 @@ import ElevatorButton from './ElevatorButton';
  * const handleClick = () => console.log('click');
  * const floor = '6';
  * const location = 'top';
+ * const buttonSize = 64;
  * return (
- *   <FloorPanel floor={floor} location={location} onClick={handleClick} noText />
+ *   <FloorPanel floor={floor} location={location} onClick={handleClick} noText buttonSize={buttonSize}/>
  * );
  */
-function FloorPanel({ floor, location, noText, onClick }) {
+function FloorPanel({ floor, location, noText, onClick, buttonSize }) {
   const panelProps = {
     noText,
     text: floor !== undefined ? `Floor ${floor}` : '',
     className: 'floor_panel',
+    buttonSize,
   };
   const upButton = (
-    <ElevatorButton onClick={onClick('up', floor)}>
+    <ElevatorButton onClick={onClick('up', floor)} buttonSize={buttonSize}>
       <ArrowUpward />
     </ElevatorButton>
   );
   const downButton = (
-    <ElevatorButton onClick={onClick('down', floor)}>
+    <ElevatorButton onClick={onClick('down', floor)} buttonSize={buttonSize}>
       <ArrowDownward />
     </ElevatorButton>
   );
@@ -67,6 +69,8 @@ FloorPanel.propTypes = {
   noText: PropTypes.bool,
   /** Callback on button click */
   onClick: PropTypes.func.isRequired,
+  /** Button size for appropriate panel sizing */
+  buttonSize: PropTypes.number.isRequired,
 };
 
 FloorPanel.defaultProps = {

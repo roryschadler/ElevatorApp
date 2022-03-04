@@ -16,17 +16,25 @@ import { Grid, Paper } from '@mui/material';
  * const handleClick = () => console.log('click');
  * const className = 'elevator_panel';
  * const text = 'Elevator Panel';
+ * const buttonSize = 64;
  * const buttons = [
- *   <ElevatorButton onClick={handleClick}>1</ElevatorButton>,
- *   <ElevatorButton onClick={handleClick}>2</ElevatorButton>
+ *   <ElevatorButton onClick={handleClick} size={buttonSize}>1</ElevatorButton>,
+ *   <ElevatorButton onClick={handleClick} size={buttonSize}>2</ElevatorButton>
  * ];
  * return (
- *   <ElevatorPanel className={className} text={text} reverse>
+ *   <ElevatorPanel className={className} text={text} reverse size={buttonSize}>
  *     {buttons}
  *   </ElevatorPanel>
  * );
  */
-function ElevatorPanel({ children, noText, text, reverse, className }) {
+function ElevatorPanel({
+  children,
+  noText,
+  text,
+  reverse,
+  className,
+  buttonSize,
+}) {
   // add custom class if passed
   const classNames = ['elevator_panel'];
   if (Array.isArray(className)) {
@@ -57,11 +65,16 @@ function ElevatorPanel({ children, noText, text, reverse, className }) {
     );
   }
 
-  const chunkSize = childButtons.length > 4 ? Math.floor(Math.sqrt(childButtons.length)) + 1 : 4;
+  // set calculated chunk size to one more than the number of buttons desired
+  const chunkSize =
+    childButtons.length > 4 ? Math.ceil(Math.sqrt(childButtons.length)) + 1 : 4;
   const minWidth = Math.ceil(childButtons.length / chunkSize);
 
   return (
-    <Paper className={classNames.join(' ')} sx={{ minWidth: minWidth*64 }}>
+    <Paper
+      className={classNames.join(' ')}
+      sx={{ minWidth: minWidth * buttonSize, padding: '10% 5%' }}
+    >
       <Grid container spacing={1} direction="column" justifyItems="center">
         {textItem}
         <Grid
@@ -71,7 +84,7 @@ function ElevatorPanel({ children, noText, text, reverse, className }) {
           alignItems="center"
           justifyContent="center"
           direction={reverse ? 'column-reverse' : 'column'}
-          sx={{ maxHeight: chunkSize*100 }}
+          sx={{ maxHeight: chunkSize * buttonSize }}
         >
           {childButtons}
         </Grid>
@@ -97,6 +110,8 @@ ElevatorPanel.propTypes = {
     PropTypes.string,
     PropTypes.arrayOf(PropTypes.string),
   ]),
+  /** Button size for appropriate panel sizing */
+  buttonSize: PropTypes.number.isRequired,
 };
 
 ElevatorPanel.defaultProps = {
