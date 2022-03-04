@@ -1,39 +1,39 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Grid, Fab } from '@mui/material';
-import { ArrowUpward, ArrowDownward } from '@mui/icons-material';
 
+/**
+ * Component for individual Elevator Button.
+ *
+ * Include a child element for display inside the button.
+ *
+ * @component
+ * @example
+ * const handleClick = () => console.log('click');
+ * const buttonText = 6;
+ * return (
+ *   <ElevatorButton onClick={handleClick}>{buttonText}</ElevatorButton>
+ * );
+ */
 class ElevatorButton extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleChange = this.handleChange.bind(this);
-  }
-
   static propTypes = {
+    /** Callback on button click */
     onClick: PropTypes.func.isRequired,
-    text: PropTypes.string.isRequired,
+    /** Element to insert inside the button */
+    children: PropTypes.node.isRequired
   };
-
-  handleChange(e) {
-    this.props.onClick();
-  }
 
   render() {
     let icon;
-    if (this.props.text === 'up') {
-      icon = <ArrowUpward></ArrowUpward>;
-    } else if (this.props.text === 'down') {
-      icon = <ArrowDownward></ArrowDownward>;
-    } else {
-      icon = <span>{this.props.text}</span>;
+    if (this.props.children) {
+      icon = this.props.children;
     }
     return (
       <Grid item>
         <Fab
-          color='primary'
+          color="primary"
           sx={{ boxShadow: 3 }}
-          aria-label={this.props.text}
-          onClick={this.handleChange}
+          onClick={this.props.onClick}
         >
           {icon}
         </Fab>
