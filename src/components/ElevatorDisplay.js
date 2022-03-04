@@ -24,14 +24,47 @@ import CarPanel from './CarPanel';
  * );
  */
 class ElevatorDisplay extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleElevatorRequest = this.handleElevatorRequest.bind(this);
+    this.state = {
+      car: {
+        location: 0,
+        direction: null,
+      },
+      ledger: [],
+    };
+  }
   static propTypes = {
     /** Current tab value */
     value: PropTypes.string.isRequired,
     /** List of all floors */
     floors: PropTypes.arrayOf(PropTypes.string).isRequired,
-    /** Callback on button click */
-    onClick: PropTypes.func.isRequired,
   };
+
+  handleElevatorRequest(destination, currentFloor) {
+    let newRequest = {};
+    if (
+      currentFloor !== undefined &&
+      (destination === 'up' || destination === 'down')
+    ) {
+      newRequest = {
+        source: 'floor',
+        direction: destination,
+        floor: currentFloor,
+      };
+    } else {
+      newRequest = {
+        source: 'car',
+        destination,
+      };
+    }
+    return () => {
+      this.setState((state) => ({
+        ledger: [...state.ledger, newRequest],
+      }));
+    };
+  }
 
   render() {
     // map floor labels to their corresponding button panels
@@ -48,7 +81,7 @@ class ElevatorDisplay extends React.Component {
           <FloorPanel
             location={location || ''}
             floor={floor}
-            onClick={this.props.onClick}
+            onClick={this.handleElevatorRequest}
           ></FloorPanel>
         );
       },
@@ -56,7 +89,7 @@ class ElevatorDisplay extends React.Component {
     );
 
     const carPanel = (
-      <CarPanel floors={this.props.floors} onClick={this.props.onClick} />
+      <CarPanel floors={this.props.floors} onClick={this.handleElevatorRequest} />
     );
 
     if (this.props.value === 'all') {

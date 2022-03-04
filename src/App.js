@@ -4,7 +4,6 @@ import { ThemeProvider } from '@mui/system';
 import { Tabs, Tab, Grid } from '@mui/material';
 
 import theme from './theme';
-// import { CarPanel, FloorPanel } from './components/ElevatorPanel';
 import ElevatorDisplay from './components/ElevatorDisplay';
 
 class App extends React.Component {
@@ -12,39 +11,9 @@ class App extends React.Component {
     super(props);
     this.state = {
       floors: ['1', '2', '3', '4', '5', '6'],
-      car: {
-        location: 0,
-        direction: null,
-      },
-      ledger: [],
       tabValue: 'all',
     };
-    this.handleElevatorRequest = this.handleElevatorRequest.bind(this);
     this.handleTabChange = this.handleTabChange.bind(this);
-  }
-
-  handleElevatorRequest(destination, currentFloor) {
-    let newRequest = {};
-    if (
-      currentFloor !== undefined &&
-      (destination === 'up' || destination === 'down')
-    ) {
-      newRequest = {
-        source: 'floor',
-        direction: destination,
-        floor: currentFloor,
-      };
-    } else {
-      newRequest = {
-        source: 'car',
-        destination,
-      };
-    }
-    return () => {
-      this.setState((state) => ({
-        ledger: [...state.ledger, newRequest],
-      }));
-    };
   }
 
   handleTabChange = (e, newTabValue) => {
@@ -73,7 +42,6 @@ class App extends React.Component {
             <Grid item xs={12}>
               <ElevatorDisplay
                 value={this.state.tabValue}
-                onClick={this.handleElevatorRequest}
                 floors={this.state.floors}
               />
             </Grid>
