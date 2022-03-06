@@ -13,7 +13,12 @@ import { Fab } from '@mui/material';
  * const buttonText = 6;
  * const buttonSize = 64;
  * return (
- *   <ElevatorButton onClick={handleClick} buttonSize={buttonSize}>{buttonText}</ElevatorButton>
+ *   <ElevatorButton
+ *     onClick={handleClick}
+ *     buttonSize={buttonSize}
+ *   >
+ *     {buttonText}
+ *   </ElevatorButton>
  * );
  */
 function ElevatorButton({ onClick, buttonSize, active, children }) {
