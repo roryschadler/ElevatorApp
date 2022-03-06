@@ -73,7 +73,7 @@ function ElevatorPanel({
   return (
     <Paper
       className={classNames.join(' ')}
-      sx={{ minWidth: minWidth * buttonSize, padding: '10% 5%' }}
+      sx={{ minWidth: minWidth * buttonSize + 10, padding: '10% 5%' }}
     >
       <Grid container spacing={1} direction="column" justifyItems="center">
         {textItem}
