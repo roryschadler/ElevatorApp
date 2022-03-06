@@ -4,6 +4,7 @@ import { Grid } from '@mui/material';
 
 import FloorPanel from './FloorPanel';
 import CarPanel from './CarPanel';
+import ElevatorControl from '../ElevatorControl';
 
 /**
  * Component for Tabbed Elevator Display
@@ -26,44 +27,17 @@ import CarPanel from './CarPanel';
 class ElevatorDisplay extends React.Component {
   constructor(props) {
     super(props);
-    this.handleElevatorRequest = this.handleElevatorRequest.bind(this);
     this.state = {
-      car: {
-        location: 0,
-        direction: null,
-      },
-      ledger: [],
+      /** elevator button size */
+      buttonSize: 64,
     };
-    this.buttonSize = 64;
+    this.handleElevatorRequest = this.handleElevatorRequest.bind(this);
+    this.controller = new ElevatorControl(this.props.floors);
   }
-  static propTypes = {
-    /** Current tab value */
-    value: PropTypes.string.isRequired,
-    /** List of all floors */
-    floors: PropTypes.arrayOf(PropTypes.string).isRequired,
-  };
 
   handleElevatorRequest(destination, currentFloor) {
-    let newRequest = {};
-    if (
-      currentFloor !== undefined &&
-      (destination === 'up' || destination === 'down')
-    ) {
-      newRequest = {
-        source: 'floor',
-        direction: destination,
-        floor: currentFloor,
-      };
-    } else {
-      newRequest = {
-        source: 'car',
-        destination,
-      };
-    }
     return () => {
-      this.setState((state) => ({
-        ledger: [...state.ledger, newRequest],
-      }));
+      this.controller.requestElevator(destination, currentFloor);
     };
   }
 
@@ -83,7 +57,7 @@ class ElevatorDisplay extends React.Component {
             location={location || ''}
             floor={floor}
             onClick={this.handleElevatorRequest}
-            buttonSize={this.buttonSize}
+            buttonSize={this.state.buttonSize}
           ></FloorPanel>
         );
       },
@@ -94,7 +68,7 @@ class ElevatorDisplay extends React.Component {
       <CarPanel
         floors={this.props.floors}
         onClick={this.handleElevatorRequest}
-        buttonSize={this.buttonSize}
+        buttonSize={this.state.buttonSize}
       />
     );
 
@@ -126,5 +100,12 @@ class ElevatorDisplay extends React.Component {
     }
   }
 }
+
+ElevatorDisplay.propTypes = {
+  /** Current tab value */
+  value: PropTypes.string.isRequired,
+  /** List of all floors */
+  floors: PropTypes.arrayOf(PropTypes.string).isRequired,
+};
 
 export default ElevatorDisplay;
