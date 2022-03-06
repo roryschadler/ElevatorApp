@@ -21,11 +21,26 @@ import ElevatorButton from './ElevatorButton';
  * const floor = '6';
  * const location = 'top';
  * const buttonSize = 64;
+ * const buttonsOn = {up: false, down: false};
  * return (
- *   <FloorPanel floor={floor} location={location} onClick={handleClick} noText buttonSize={buttonSize}/>
+ *   <FloorPanel
+ *     floor={floor}
+ *     location={location}
+ *     onClick={handleClick}
+ *     noText
+ *     buttonSize={buttonSize}
+ *     buttonsOn={buttonsOn}
+ *   />
  * );
  */
-function FloorPanel({ floor, location, noText, onClick, buttonSize }) {
+function FloorPanel({
+  floor,
+  location,
+  noText,
+  onClick,
+  buttonSize,
+  buttonsOn,
+}) {
   const panelProps = {
     noText,
     text: floor !== undefined ? `Floor ${floor}` : '',
@@ -33,12 +48,20 @@ function FloorPanel({ floor, location, noText, onClick, buttonSize }) {
     buttonSize,
   };
   const upButton = (
-    <ElevatorButton onClick={onClick('up', floor)} buttonSize={buttonSize}>
+    <ElevatorButton
+      onClick={onClick('up', floor)}
+      buttonSize={buttonSize}
+      active={buttonsOn.up}
+    >
       <ArrowUpward />
     </ElevatorButton>
   );
   const downButton = (
-    <ElevatorButton onClick={onClick('down', floor)} buttonSize={buttonSize}>
+    <ElevatorButton
+      onClick={onClick('down', floor)}
+      buttonSize={buttonSize}
+      active={buttonsOn.down}
+    >
       <ArrowDownward />
     </ElevatorButton>
   );
@@ -71,6 +94,8 @@ FloorPanel.propTypes = {
   onClick: PropTypes.func.isRequired,
   /** Button size for appropriate panel sizing */
   buttonSize: PropTypes.number.isRequired,
+  /** Button activity flags */
+  buttonsOn: PropTypes.shape({ up: PropTypes.bool, down: PropTypes.bool }),
 };
 
 FloorPanel.defaultProps = {

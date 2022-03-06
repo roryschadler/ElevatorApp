@@ -1,6 +1,15 @@
 import SortedArraySet from 'collections/sorted-array-set';
 
+/**
+ * Up direction flag.
+ * @typedef {number} UP
+ */
 const UP = 1;
+
+/**
+ * Down direction flag.
+ * @typedef {number} DOWN
+ */
 const DOWN = -1;
 
 /**
@@ -21,16 +30,23 @@ const DOWN = -1;
  * const floors = ['L', '1', '2', '3'];
  * const travelInterval = 1000;
  * const floorInterval = 2000;
- * const controller = new ElevatorControl(floors, travelInterval, floorInterval);
+ * const controller = new ElevatorControl(
+ *   floors,
+ *   travelInterval,
+ *   floorInterval
+ * );
  */
+
 class ElevatorControl {
   /**
    * @constructor
    * @param {string[]} floors Floor labels in order
-   * @param {number} [travelInterval] Time between floors in ms
-   * @param {number} [floorInterval] Time to stop at a floor in ms
+   * @param {ElevatorControl~buttonCallBack} [buttonCallBack] - Function to call
+   * on receiving a request and on elevator arrival
+   * @param {number} [travelInterval] - Time between floors in ms
+   * @param {number} [floorInterval] - Time to stop at a floor in ms
    */
-  constructor(floors, travelInterval, floorInterval) {
+  constructor(floors, buttonCallBack, travelInterval, floorInterval) {
     this.floors = floors;
     this.pendingUp = new SortedArraySet([], equalRequests, compareRequests);
     this.pendingDown = new SortedArraySet([], equalRequests, compareRequests);
@@ -43,14 +59,31 @@ class ElevatorControl {
     this.travelInterval = travelInterval || 5000;
     this.floorInterval = floorInterval || 10000;
     this.currentTimeoutID = null;
+    this.buttonCallBack = buttonCallBack || ((announcement) => {});
 
     this.moveCar = this.moveCar.bind(this);
   }
 
   /**
+   * This callback informs the caller of each received request, and on each
+   * requested floor arrival.
+   * @callback ElevatorControl~buttonCallBack
+   * @param {Object} announcement - Elevator announcement of request received or
+   *   arrival made.
+   * @param {string} announcement.source - Either 'car' or 'floor' depending on
+   *   the source of the request. Always 'car' for arrival calls.
+   * @param {number} announcement.destination - Index of floors array
+   *   corresponding to the request location/destination, or the arrival floor
+   * @param {string} announcement.direction - Direction of request received,
+   *   or direction the car was traveling before floor arrival. `null` if
+   *   responding to a 'car' request.
+   */
+
+  /**
    * Request the elevator to a given floor or direction.
-   * @param {string} destination 'up' or 'down', or a floor label
-   * @param {string} [currentFloor] floor label if destination is 'up' or 'down'
+   * @param {string} destination - 'up' or 'down', or a floor label
+   * @param {string} [currentFloor] - floor label if destination is 'up' or
+   *   'down'
    */
   requestElevator(destination, currentFloor) {
     let request = {};
@@ -60,13 +93,14 @@ class ElevatorControl {
     ) {
       request = {
         source: 'floor',
-        direction: destination === 'up' ? UP : DOWN,
+        requestDirection: destination,
+        travelDirection: destination === 'up' ? UP : DOWN,
         destination: this.floors.indexOf(currentFloor),
       };
       console.log(
-        `Request to go ${request.direction === UP ? 'up' : 'down'} from floor ${
-          this.floors[request.destination]
-        }`
+        `Request to go ${
+          request.travelDirection === UP ? 'up' : 'down'
+        } from floor ${this.floors[request.destination]}`
       );
     } else {
       request = {
@@ -76,11 +110,17 @@ class ElevatorControl {
       console.log(`Request to go to floor ${this.floors[request.destination]}`);
     }
     this.registerElevatorRequest(request);
+    this.buttonCallBack({
+      source: request.source,
+      destination: request.destination,
+      direction: request.requestDirection || null,
+    });
   }
 
   /**
    * Assigns the request to the correct queue.
-   * @param {Object.<string, (string|number)>} request Request object for elevator control
+   * @param {Object.<string, (string|number)>} request - Request object for
+   *   elevator control.
    */
   registerElevatorRequest(request) {
     // car idle, apply new job right away
@@ -92,7 +132,7 @@ class ElevatorControl {
     } else {
       // car is busy, check if request is on the way
       if (request.source === 'floor') {
-        if (request.direction === this.car.direction) {
+        if (request.travelDirection === this.car.direction) {
           if (
             this.car.direction === UP &&
             request.destination < this.car.location
@@ -111,9 +151,9 @@ class ElevatorControl {
           }
         } else {
           // direction doesn't match
-          if (request.direction === UP) {
+          if (request.travelDirection === UP) {
             this.pendingUp.add(request);
-          } else if (request.direction === DOWN) {
+          } else if (request.travelDirection === DOWN) {
             this.pendingDown.add(request);
           }
         }
@@ -140,7 +180,8 @@ class ElevatorControl {
 
   /**
    * Move elevator towards target floor, waiting where necessary.
-   * @param {Object.<string, (string|number)>} stop Request object for elevator control
+   * @param {Object.<string, (string|number)>} stop - Request object for
+   *   elevator control.
    */
   async handleRequest(stop) {
     while (stop.destination !== this.car.location) {
@@ -148,12 +189,17 @@ class ElevatorControl {
       this.moveCar(this.getTravelDirection(stop.destination));
     }
     console.log(`Stopping at floor '${this.floors[this.car.location]}'`);
+    this.buttonCallBack({
+      source: 'car',
+      destination: this.car.location,
+      direction: this.car.direction === UP ? 'up' : 'down',
+    });
     await sleep(this.floorInterval);
   }
 
   /**
    * Returns the direction of the target floor from the elevator car.
-   * @param {number} targetFloor target floor index
+   * @param {number} targetFloor - target floor index
    * @returns UP or DOWN
    */
   getTravelDirection(targetFloor) {
@@ -209,7 +255,7 @@ class ElevatorControl {
   /**
    * Moves the elevator one step in the given direction. Checks to see if there
    * are any requests for the current location, and handles them if so.
-   * @param {(UP|DOWN)} direction Direction to travel
+   * @param {(UP|DOWN)} direction - Direction to travel
    */
   async moveCar(direction) {
     if (direction === UP) {
@@ -228,8 +274,8 @@ class ElevatorControl {
 
 /**
  * Comparator for request objects.
- * @param {Object.<string, (string|number)>} a First request to compare
- * @param {Object.<string, (string|number)>} b Second request to compare
+ * @param {Object.<string, (string|number)>} a - First request to compare
+ * @param {Object.<string, (string|number)>} b - Second request to compare
  * @returns a < b
  */
 function compareRequests(a, b) {
@@ -238,8 +284,8 @@ function compareRequests(a, b) {
 
 /**
  * Equality tester for request objects.
- * @param {Object.<string, (string|number)>} a First request to compare
- * @param {Object.<string, (string|number)>} b Second request to compare
+ * @param {Object.<string, (string|number)>} a - First request to compare
+ * @param {Object.<string, (string|number)>} b - Second request to compare
  * @returns a === b
  */
 function equalRequests(a, b) {
@@ -248,7 +294,7 @@ function equalRequests(a, b) {
 
 /**
  * Utility function for waiting for elevator motion.
- * @param {number} ms Time to wait
+ * @param {number} ms - Time to wait
  * @returns Promise that resolves in the given time
  */
 function sleep(ms) {

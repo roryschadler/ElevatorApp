@@ -16,9 +16,18 @@ import { Fab } from '@mui/material';
  *   <ElevatorButton onClick={handleClick} buttonSize={buttonSize}>{buttonText}</ElevatorButton>
  * );
  */
-function ElevatorButton({ onClick, buttonSize, children }) {
+function ElevatorButton({ onClick, buttonSize, active, children }) {
   return (
-    <Fab color="primary" sx={{ boxShadow: 3, height: buttonSize, width: buttonSize }} onClick={onClick}>
+    <Fab
+      sx={{
+        bgcolor: active ? 'primary.main' : 'secondary',
+        boxShadow: 3,
+        height: buttonSize,
+        width: buttonSize,
+      }}
+      onClick={onClick}
+      disableRipple
+    >
       {children}
     </Fab>
   );
@@ -31,6 +40,8 @@ ElevatorButton.propTypes = {
   children: PropTypes.node.isRequired,
   /** Button size */
   buttonSize: PropTypes.number.isRequired,
+  /** Button is pressed */
+  active: PropTypes.bool.isRequired,
 };
 
 export default ElevatorButton;

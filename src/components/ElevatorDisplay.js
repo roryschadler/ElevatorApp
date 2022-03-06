@@ -30,15 +30,50 @@ class ElevatorDisplay extends React.Component {
     this.state = {
       /** elevator button size */
       buttonSize: 64,
+      floorButtons: new Array(this.props.floors.length).fill({
+        up: false,
+        down: false,
+      }),
+      carButtons: new Array(this.props.floors.length).fill(false),
     };
     this.handleElevatorRequest = this.handleElevatorRequest.bind(this);
-    this.controller = new ElevatorControl(this.props.floors);
+    this.handleElevatorCallBack = this.handleElevatorCallBack.bind(this);
+    this.controller = new ElevatorControl(this.props.floors, this.handleElevatorCallBack);
   }
 
   handleElevatorRequest(destination, currentFloor) {
     return () => {
       this.controller.requestElevator(destination, currentFloor);
     };
+  }
+
+  handleElevatorCallBack({ source, destination, direction }) {
+    const updatedFloorButtons = Object.assign({}, this.state.floorButtons[destination]);
+    var carButton = null;
+    if (source === 'car') {
+      // direction only provided on arrival
+      if (direction) {
+        carButton = false;
+        updatedFloorButtons[direction] = false;
+      } else {
+        // responding to car button press, not arrival
+        carButton = true;
+      }
+    } else if (source === 'floor') {
+      // responding to floor button press
+      updatedFloorButtons[direction] = true;
+    }
+    this.setState((state) => {
+      const newFloorButtons = [...state.floorButtons];
+      newFloorButtons[destination] = updatedFloorButtons;
+      if (carButton !== null) {
+        const newCarButtons = [...state.carButtons];
+        newCarButtons[destination] = carButton;
+        return { floorButtons: newFloorButtons, carButtons: newCarButtons };
+      } else {
+        return { floorButtons: newFloorButtons };
+      }
+    });
   }
 
   render() {
@@ -58,6 +93,7 @@ class ElevatorDisplay extends React.Component {
             floor={floor}
             onClick={this.handleElevatorRequest}
             buttonSize={this.state.buttonSize}
+            buttonsOn={this.state.floorButtons[index]}
           ></FloorPanel>
         );
       },
@@ -69,6 +105,7 @@ class ElevatorDisplay extends React.Component {
         floors={this.props.floors}
         onClick={this.handleElevatorRequest}
         buttonSize={this.state.buttonSize}
+        buttonsOn={this.state.carButtons}
       />
     );
 
