@@ -1,4 +1,5 @@
 import SortedArraySet from 'collections/sorted-array-set';
+import EventEmitter from 'events';
 
 /**
  * Up direction flag.
@@ -15,23 +16,28 @@ const DOWN = -1;
 /**
  * Elevator Controller object
  *
- * Contains the logic for the Elevator Application. Provides a request
- * function for ElevatorButtons to use as a callback, and then manages
- * fulfilling each request according to a few rules:
+ * Contains the logic for the Elevator Application. Provides a request function
+ * for ElevatorButtons to use as a callback, and then manages fulfilling each
+ * request according to a few rules:
  *
- * * Floor buttons summon the elevator to that floor
- * * Inside buttons send the elevator to their labeled floor
- * * If a button is pressed that is in line with the current
- *   direction of the elevator, it will stop at that floor
- * * If a button is pressed that is _not_ in line with the current
- *   direction of the elevator, it will complete all compatible
+ * 1. Floor buttons summon the elevator to that floor
+ * 2. Inside buttons send the elevator to their labeled floor
+ * 3. If a button is pressed that is in line with the currentRequests direction of the
+ *   elevator, it will stop at that floor
+ * 4. If a button is pressed that is _not_ in line with the currentRequests direction of
+ *   the elevator, it will complete all compatible stops first
+ *
+ * If provided with a button callback, it calls it on every received request and
+ * every floor arrival.
  *
  * @example
  * const floors = ['L', '1', '2', '3'];
+ * const buttonCallBack = (buttonChange) => console.log(buttonChange);
  * const travelInterval = 1000;
  * const floorInterval = 2000;
  * const controller = new ElevatorControl(
  *   floors,
+ *   buttonCallback,
  *   travelInterval,
  *   floorInterval
  * );
@@ -41,25 +47,40 @@ class ElevatorControl {
   /**
    * @constructor
    * @param {string[]} floors Floor labels in order
-   * @param {ElevatorControl~buttonCallBack} [buttonCallBack] - Function to call
+   * @param {buttonCallBack} [buttonCallBack] - Function to call
    * on receiving a request and on elevator arrival
    * @param {number} [travelInterval] - Time between floors in ms
    * @param {number} [floorInterval] - Time to stop at a floor in ms
    */
   constructor(floors, buttonCallBack, travelInterval, floorInterval) {
     this.floors = floors;
-    this.pendingUp = new SortedArraySet([], equalRequests, compareRequests);
-    this.pendingDown = new SortedArraySet([], equalRequests, compareRequests);
-    this.current = new SortedArraySet([], equalRequests, compareRequests);
+    this.buttonCallBack = buttonCallBack || (() => {});
+    this.travelInterval = travelInterval || 5000;
+    this.floorInterval = floorInterval || 10000;
+
+    this.pendingUpRequests = new SortedArraySet(
+      [],
+      equalRequests,
+      compareRequests
+    );
+    this.pendingDownRequests = new SortedArraySet(
+      [],
+      equalRequests,
+      compareRequests
+    );
+    this.currentRequests = new SortedArraySet(
+      [],
+      equalRequests,
+      compareRequests
+    );
+    this.activeRequest = {};
+    this.abortEmitter = new EventEmitter();
+
     this.car = {
       location: 0,
       direction: UP,
       busy: false,
     };
-    this.travelInterval = travelInterval || 5000;
-    this.floorInterval = floorInterval || 10000;
-    this.currentTimeoutID = null;
-    this.buttonCallBack = buttonCallBack || ((announcement) => {});
 
     this.moveCar = this.moveCar.bind(this);
   }
@@ -67,17 +88,66 @@ class ElevatorControl {
   /**
    * This callback informs the caller of each received request, and on each
    * requested floor arrival.
-   * @callback ElevatorControl~buttonCallBack
-   * @param {Object} announcement - Elevator announcement of request received or
+   * @callback buttonCallBack
+   * @param {Object} buttonChange - Elevator announcement of request received or
    *   arrival made.
-   * @param {string} announcement.source - Either 'car' or 'floor' depending on
+   * @param {string} buttonChange.type - Either 'car' or 'floor' depending on
    *   the source of the request. Always 'car' for arrival calls.
-   * @param {number} announcement.destination - Index of floors array
+   * @param {number} buttonChange.location - Index of floors array
    *   corresponding to the request location/destination, or the arrival floor
-   * @param {string} announcement.direction - Direction of request received,
-   *   or direction the car was traveling before floor arrival. `null` if
-   *   responding to a 'car' request.
+   * @param {string} [buttonChange.button] - If the type is 'floor', this
+   *   contains 'up' or 'down' depending on which button should change.
+   * @param {boolean} buttonchange.active - `true` if button should be active,
+   *   `false` if not
    */
+
+  /**
+   * Handles the given elevator callback, providing the correct information to
+   * toggle button lights.
+   * @param {Object} request - Elevator request object
+   * @param {string} request.source - Either 'car' or 'floor' depending on
+   *   the source of the request.
+   * @param {number} request.destination - Index of floors array corresponding
+   *   to the request location/destination, or the arrival floor
+   * @param {string} [request.direction] - If the type is 'floor' or arrival is
+   *   true, this contains 'up' or 'down' depending on which button should
+   *   change.
+   * @param {boolean} [request.arrival] - `true` if this request is for a floor
+   *   arrival.
+   */
+  handleElevatorCallBack({ source, destination, direction, arrival }) {
+    if (source === 'car') {
+      if (arrival) {
+        // turn off both car button and floor button
+        this.buttonCallBack({
+          type: 'car',
+          location: destination,
+          active: false,
+        });
+        this.buttonCallBack({
+          type: 'floor',
+          location: destination,
+          button: direction,
+          active: false
+        });
+      } else {
+        // responding to car button press, not arrival
+        this.buttonCallBack({
+          type: 'car',
+          location: destination,
+          active: true,
+        });
+      }
+    } else if (source === 'floor') {
+      // responding to floor button press
+      this.buttonCallBack({
+        type: 'floor',
+        location: destination,
+        button: direction,
+        active: true,
+      });
+    }
+  }
 
   /**
    * Request the elevator to a given floor or direction.
@@ -93,14 +163,14 @@ class ElevatorControl {
     ) {
       request = {
         source: 'floor',
-        requestDirection: destination,
+        direction: destination,
         travelDirection: destination === 'up' ? UP : DOWN,
         destination: this.floors.indexOf(currentFloor),
       };
       console.log(
-        `Request to go ${
-          request.travelDirection === UP ? 'up' : 'down'
-        } from floor ${this.floors[request.destination]}`
+        `Request to go ${request.direction} from floor ${
+          this.floors[request.destination]
+        }`
       );
     } else {
       request = {
@@ -110,11 +180,7 @@ class ElevatorControl {
       console.log(`Request to go to floor ${this.floors[request.destination]}`);
     }
     this.registerElevatorRequest(request);
-    this.buttonCallBack({
-      source: request.source,
-      destination: request.destination,
-      direction: request.requestDirection || null,
-    });
+    this.handleElevatorCallBack(request);
   }
 
   /**
@@ -127,7 +193,7 @@ class ElevatorControl {
     if (!this.car.busy) {
       this.car.busy = true;
       this.car.direction = this.getTravelDirection(request.destination);
-      this.current.add(request);
+      this.currentRequests.add(request);
       this.tick();
     } else {
       // car is busy, check if request is on the way
@@ -138,23 +204,23 @@ class ElevatorControl {
             request.destination < this.car.location
           ) {
             // going up, but floor is below location
-            this.pendingUp.add(request);
+            this.pendingUpRequests.add(request);
           } else if (
             this.car.direction === DOWN &&
             request.destination > this.car.location
           ) {
             // going down, but floor is above location
-            this.pendingDown.add(request);
+            this.pendingDownRequests.add(request);
           } else {
             // direction matches and floor is upcoming
-            this.current.add(request);
+            this.currentRequests.add(request);
           }
         } else {
           // direction doesn't match
           if (request.travelDirection === UP) {
-            this.pendingUp.add(request);
+            this.pendingUpRequests.add(request);
           } else if (request.travelDirection === DOWN) {
-            this.pendingDown.add(request);
+            this.pendingDownRequests.add(request);
           }
         }
       } else if (request.source === 'car') {
@@ -163,19 +229,37 @@ class ElevatorControl {
           request.destination < this.car.location
         ) {
           // going up, but floor is below location
-          this.pendingDown.add(request);
+          this.pendingDownRequests.add(request);
         } else if (
           this.car.direction === DOWN &&
           request.destination > this.car.location
         ) {
           // going down, but floor is above location
-          this.pendingUp.add(request);
+          this.pendingUpRequests.add(request);
         } else {
           // floor is upcoming
-          this.current.add(request);
+          if (
+            this.activeRequest &&
+            this.activeRequest.travelDirection !== this.car.direction
+          ) {
+            // active request would turn the elevator around before fulfilling
+            // this new request -- against rule #4 of the class
+            if (this.activeRequest.travelDirection === UP) {
+              this.pendingUpRequests.add(this.activeRequest);
+            } else if (this.activeRequest.travelDirection === DOWN) {
+              this.pendingDownRequests.add(this.activeRequest);
+            }
+            this.abortActiveRequest();
+          }
+          this.currentRequests.add(request);
         }
       }
     }
+  }
+
+  abortActiveRequest() {
+    this.abortEmitter.emit('abort');
+    this.activeRequest = { abort: true };
   }
 
   /**
@@ -185,16 +269,21 @@ class ElevatorControl {
    */
   async handleRequest(stop) {
     while (stop.destination !== this.car.location) {
-      await sleep(this.travelInterval);
+      await this.sleep(this.travelInterval);
+      if (this.activeRequest.abort) {
+        // timer ended by abort, stop handling this request
+        return;
+      }
       this.moveCar(this.getTravelDirection(stop.destination));
     }
     console.log(`Stopping at floor '${this.floors[this.car.location]}'`);
-    this.buttonCallBack({
+    this.handleElevatorCallBack({
       source: 'car',
       destination: this.car.location,
       direction: this.car.direction === UP ? 'up' : 'down',
+      arrival: true,
     });
-    await sleep(this.floorInterval);
+    await this.sleep(this.floorInterval);
   }
 
   /**
@@ -211,40 +300,41 @@ class ElevatorControl {
    * the next stop.
    */
   async tick() {
-    if (this.current.length > 0) {
-      let nextStop;
+    if (this.currentRequests.length > 0) {
       if (this.car.direction === UP) {
-        nextStop = this.current.shift();
-        await this.handleRequest(nextStop);
-        if (this.current.length <= 0) {
-          // we're out of current up jobs
-          if (this.pendingDown.length > 0) {
+        this.activeRequest = this.currentRequests.shift();
+        await this.handleRequest(this.activeRequest);
+        if (this.currentRequests.length <= 0) {
+          // we're out of currentRequests up jobs
+          if (this.pendingDownRequests.length > 0) {
             // if there are down jobs, add them and switch directions
-            this.current = this.pendingDown;
+            this.currentRequests = this.pendingDownRequests;
             this.car.direction = DOWN;
-          } else if (this.pendingUp.length > 0) {
+          } else if (this.pendingUpRequests.length > 0) {
             // we have pending up jobs below us but no pending down jobs
-            this.current = this.pendingUp;
+            this.currentRequests = this.pendingUpRequests;
           } else {
             // no requests right now
             this.car.busy = false;
+            this.activeRequest = {};
           }
         }
       } else if (this.car.direction === DOWN) {
-        nextStop = this.current.pop();
-        await this.handleRequest(nextStop);
-        if (this.current.length <= 0) {
-          // we're out of current down jobs
-          if (this.pendingUp.length > 0) {
+        this.activeRequest = this.currentRequests.pop();
+        await this.handleRequest(this.activeRequest);
+        if (this.currentRequests.length <= 0) {
+          // we're out of currentRequests down jobs
+          if (this.pendingUpRequests.length > 0) {
             // if there are up jobs, add them and switch directions
-            this.current = this.pendingUp;
+            this.currentRequests = this.pendingUpRequests;
             this.car.direction = UP;
-          } else if (this.pendingDown.length > 0) {
+          } else if (this.pendingDownRequests.length > 0) {
             // we have pending down jobs below us but no pending up jobs
-            this.current = this.pendingDown;
+            this.currentRequests = this.pendingDownRequests;
           } else {
             // no requests right now
             this.car.busy = false;
+            this.activeRequest = {};
           }
         }
       }
@@ -254,7 +344,7 @@ class ElevatorControl {
 
   /**
    * Moves the elevator one step in the given direction. Checks to see if there
-   * are any requests for the current location, and handles them if so.
+   * are any requests for the currentRequests location, and handles them if so.
    * @param {(UP|DOWN)} direction - Direction to travel
    */
   async moveCar(direction) {
@@ -265,10 +355,25 @@ class ElevatorControl {
     }
     console.log(`Elevator at floor '${this.floors[this.car.location]}'`);
     const currentLocation = { destination: this.car.location };
-    if (this.current.has(currentLocation)) {
-      await this.handleRequest(this.current.get(currentLocation));
-      this.current.delete(currentLocation);
+    if (this.currentRequests.has(currentLocation)) {
+      await this.handleRequest(this.currentRequests.get(currentLocation));
+      this.currentRequests.delete(currentLocation);
     }
+  }
+
+  /**
+   * Utility function for waiting for elevator motion.
+   * @param {number} ms - Time to wait
+   * @returns Promise that resolves in the given time
+   */
+  sleep(ms) {
+    return new Promise((resolve) => {
+      let currentTimeoutID = setTimeout(resolve, ms);
+      this.abortEmitter.on('abort', () => {
+        clearTimeout(currentTimeoutID);
+        resolve();
+      });
+    });
   }
 }
 
@@ -290,15 +395,6 @@ function compareRequests(a, b) {
  */
 function equalRequests(a, b) {
   return a.destination === b.destination;
-}
-
-/**
- * Utility function for waiting for elevator motion.
- * @param {number} ms - Time to wait
- * @returns Promise that resolves in the given time
- */
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export default ElevatorControl;

@@ -47,30 +47,16 @@ class ElevatorDisplay extends React.Component {
     };
   }
 
-  handleElevatorCallBack({ source, destination, direction }) {
-    const updatedFloorButtons = Object.assign({}, this.state.floorButtons[destination]);
-    var carButton = null;
-    if (source === 'car') {
-      // direction only provided on arrival
-      if (direction) {
-        carButton = false;
-        updatedFloorButtons[direction] = false;
-      } else {
-        // responding to car button press, not arrival
-        carButton = true;
-      }
-    } else if (source === 'floor') {
-      // responding to floor button press
-      updatedFloorButtons[direction] = true;
-    }
+  handleElevatorCallBack({ type, location, button, active }) {
     this.setState((state) => {
-      const newFloorButtons = [...state.floorButtons];
-      newFloorButtons[destination] = updatedFloorButtons;
-      if (carButton !== null) {
+      if (type === 'car') {
         const newCarButtons = [...state.carButtons];
-        newCarButtons[destination] = carButton;
-        return { floorButtons: newFloorButtons, carButtons: newCarButtons };
-      } else {
+        newCarButtons[location] = active;
+        return { carButtons: newCarButtons };
+      } else if (type === 'floor') {
+        const newFloorButtons = [...state.floorButtons];
+        const currentFloorButtons = newFloorButtons[location];
+        newFloorButtons[location] = {...currentFloorButtons, [button]: active};
         return { floorButtons: newFloorButtons };
       }
     });
