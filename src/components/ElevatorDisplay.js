@@ -5,6 +5,7 @@ import { Grid } from '@mui/material';
 import FloorPanel from './FloorPanel';
 import CarPanel from './CarPanel';
 import ElevatorControl from '../ElevatorControl';
+import ElevatorTracker from './ElevatorTracker';
 
 /**
  * Component for Tabbed Elevator Display
@@ -35,16 +36,27 @@ class ElevatorDisplay extends React.Component {
         down: false,
       }),
       carButtons: new Array(this.props.floors.length).fill(false),
+      elevatorPosition: 0,
     };
     this.handleElevatorRequest = this.handleElevatorRequest.bind(this);
     this.handleElevatorCallBack = this.handleElevatorCallBack.bind(this);
-    this.controller = new ElevatorControl(this.props.floors, this.handleElevatorCallBack);
+    this.handleElevatorPosition = this.handleElevatorPosition.bind(this);
+    this.controller = new ElevatorControl(
+      this.props.floors,
+      this.state.elevatorPosition,
+      this.handleElevatorCallBack,
+      this.handleElevatorPosition
+    );
   }
 
   handleElevatorRequest(destination, currentFloor) {
     return () => {
       this.controller.requestElevator(destination, currentFloor);
     };
+  }
+
+  handleElevatorPosition(position) {
+    this.setState(() => ({ elevatorPosition: position }));
   }
 
   handleElevatorCallBack({ type, location, button, active }) {
@@ -56,7 +68,10 @@ class ElevatorDisplay extends React.Component {
       } else if (type === 'floor') {
         const newFloorButtons = [...state.floorButtons];
         const currentFloorButtons = newFloorButtons[location];
-        newFloorButtons[location] = {...currentFloorButtons, [button]: active};
+        newFloorButtons[location] = {
+          ...currentFloorButtons,
+          [button]: active,
+        };
         return { floorButtons: newFloorButtons };
       }
     });
@@ -103,6 +118,12 @@ class ElevatorDisplay extends React.Component {
           columns={{ xs: 4, sm: 8, md: 12, lg: 12 }}
           spacing={{ xs: 1, md: 3 }}
         >
+          <Grid xs={2} item>
+            <ElevatorTracker
+              floors={this.props.floors}
+              position={this.state.elevatorPosition}
+            />
+          </Grid>
           <Grid xs={3} item>
             {carPanel}
           </Grid>

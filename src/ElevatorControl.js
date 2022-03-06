@@ -22,10 +22,10 @@ const DOWN = -1;
  *
  * 1. Floor buttons summon the elevator to that floor
  * 2. Inside buttons send the elevator to their labeled floor
- * 3. If a button is pressed that is in line with the currentRequests direction of the
- *   elevator, it will stop at that floor
- * 4. If a button is pressed that is _not_ in line with the currentRequests direction of
- *   the elevator, it will complete all compatible stops first
+ * 3. If a button is pressed that is in line with the currentRequests direction
+ *   of the elevator, it will stop at that floor
+ * 4. If a button is pressed that is _not_ in line with the currentRequests
+ *   direction of the elevator, it will complete all compatible stops first
  *
  * If provided with a button callback, it calls it on every received request and
  * every floor arrival.
@@ -46,17 +46,30 @@ const DOWN = -1;
 class ElevatorControl {
   /**
    * @constructor
-   * @param {string[]} floors Floor labels in order
-   * @param {buttonCallBack} [buttonCallBack] - Function to call
-   * on receiving a request and on elevator arrival
+   * @param {string[]} floors - Floor labels in order
+   * @param {number} initialPosition - Initial elevator position as an index of
+   *   the floors array.
+   * @param {buttonCallBack} [buttonCallBack] - Function to call on receiving a
+   *   request and on elevator arrival
+   * @param {buttonCallBack} [positionCallBack] - Function to call when the
+   *   elevator moves
    * @param {number} [travelInterval] - Time between floors in ms
    * @param {number} [floorInterval] - Time to stop at a floor in ms
    */
-  constructor(floors, buttonCallBack, travelInterval, floorInterval) {
+  constructor(
+    floors,
+    initialPosition,
+    buttonCallBack,
+    positionCallBack,
+    travelInterval,
+    floorInterval
+  ) {
     this.floors = floors;
     this.buttonCallBack = buttonCallBack || (() => {});
+    this.positionCallBack = positionCallBack || (() => {});
     this.travelInterval = travelInterval || 5000;
-    this.floorInterval = floorInterval || 10000;
+    this.floorInterval = floorInterval ? Math.floor(floorInterval * 0.7) : 8000;
+    this.doorInterval = floorInterval ? Math.floor(floorInterval * 0.15) : 1500;
 
     this.pendingUpRequests = new SortedArraySet(
       [],
@@ -77,10 +90,12 @@ class ElevatorControl {
     this.abortEmitter = new EventEmitter();
 
     this.car = {
-      location: 0,
+      location: initialPosition,
       direction: UP,
       busy: false,
     };
+
+    this.positionCallBack(0);
 
     this.moveCar = this.moveCar.bind(this);
   }
@@ -128,7 +143,7 @@ class ElevatorControl {
           type: 'floor',
           location: destination,
           button: direction,
-          active: false
+          active: false,
         });
       } else {
         // responding to car button press, not arrival
@@ -277,13 +292,14 @@ class ElevatorControl {
       this.moveCar(this.getTravelDirection(stop.destination));
     }
     console.log(`Stopping at floor '${this.floors[this.car.location]}'`);
+    await this.sleep(this.doorInterval);
     this.handleElevatorCallBack({
       source: 'car',
       destination: this.car.location,
       direction: this.car.direction === UP ? 'up' : 'down',
       arrival: true,
     });
-    await this.sleep(this.floorInterval);
+    await this.sleep(this.doorInterval + this.floorInterval);
   }
 
   /**
@@ -353,6 +369,7 @@ class ElevatorControl {
     } else if (direction === DOWN) {
       this.car.location--;
     }
+    this.positionCallBack(this.car.location);
     console.log(`Elevator at floor '${this.floors[this.car.location]}'`);
     const currentLocation = { destination: this.car.location };
     if (this.currentRequests.has(currentLocation)) {
