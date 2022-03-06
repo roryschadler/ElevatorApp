@@ -36,6 +36,7 @@ function CarPanel({ floors, onClick, noText, buttonSize, buttonsOn }) {
       key={floor}
       buttonSize={buttonSize}
       active={buttonsOn[index]}
+      label={`Car button for floor ${floor}`}
     >
       {floor}
     </ElevatorButton>
@@ -47,6 +48,7 @@ function CarPanel({ floors, onClick, noText, buttonSize, buttonsOn }) {
       noText={noText}
       className="car_panel"
       buttonSize={buttonSize}
+      label="Elevator Car Panel"
     >
       {buttonList}
     </ElevatorPanel>

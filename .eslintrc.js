@@ -4,7 +4,12 @@ module.exports = {
     node: true,
     es2021: true,
   },
-  extends: ['eslint:recommended', 'plugin:react/recommended', 'react-app'],
+  extends: [
+    'eslint:recommended',
+    'plugin:react/recommended',
+    'react-app',
+    'plugin:jsx-a11y/recommended',
+  ],
   parserOptions: {
     ecmaFeatures: {
       jsx: true,
@@ -12,7 +17,7 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: ['react'],
+  plugins: ['react', 'jsx-a11y'],
   rules: {
     semi: ['error', 'always'],
     'max-len': ['error', { code: 80 }],

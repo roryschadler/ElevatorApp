@@ -21,7 +21,7 @@ import { Fab } from '@mui/material';
  *   </ElevatorButton>
  * );
  */
-function ElevatorButton({ onClick, buttonSize, active, children }) {
+function ElevatorButton({ onClick, buttonSize, active, label, children }) {
   return (
     <Fab
       sx={{
@@ -32,6 +32,7 @@ function ElevatorButton({ onClick, buttonSize, active, children }) {
       }}
       onClick={onClick}
       disableRipple
+      aria-label={label}
     >
       {children}
     </Fab>
@@ -47,6 +48,8 @@ ElevatorButton.propTypes = {
   buttonSize: PropTypes.number.isRequired,
   /** Button is pressed */
   active: PropTypes.bool.isRequired,
+  /** Used for aria-label */
+  label: PropTypes.string.isRequired,
 };
 
 export default ElevatorButton;

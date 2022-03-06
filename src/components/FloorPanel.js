@@ -46,12 +46,14 @@ function FloorPanel({
     text: floor !== undefined ? `Floor ${floor}` : '',
     className: 'floor_panel',
     buttonSize,
+    label: `Floor ${floor} panel`,
   };
   const upButton = (
     <ElevatorButton
       onClick={onClick('up', floor)}
       buttonSize={buttonSize}
       active={buttonsOn.up}
+      label={`Floor ${floor} up button`}
     >
       <ArrowUpward />
     </ElevatorButton>
@@ -61,6 +63,7 @@ function FloorPanel({
       onClick={onClick('down', floor)}
       buttonSize={buttonSize}
       active={buttonsOn.down}
+      label={`Floor ${floor} down button`}
     >
       <ArrowDownward />
     </ElevatorButton>

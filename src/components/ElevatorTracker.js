@@ -17,7 +17,7 @@ import PropTypes from 'prop-types';
  */
 function ElevatorTracker({ floors, position }) {
   return (
-    <Paper>
+    <Paper aria-label="Elevator tracking display">
       <Stack direction="column-reverse">
         {floors.map((floor, index) => (
           <Button

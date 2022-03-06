@@ -34,6 +34,7 @@ function ElevatorPanel({
   reverse,
   className,
   buttonSize,
+  label,
 }) {
   // add custom class if passed
   const classNames = ['elevator_panel'];
@@ -74,6 +75,7 @@ function ElevatorPanel({
     <Paper
       className={classNames.join(' ')}
       sx={{ minWidth: minWidth * buttonSize + 10, padding: '10% 5%' }}
+      aria-label={label}
     >
       <Grid container spacing={1} direction="column" justifyItems="center">
         {textItem}
@@ -112,6 +114,8 @@ ElevatorPanel.propTypes = {
   ]),
   /** Button size for appropriate panel sizing */
   buttonSize: PropTypes.number.isRequired,
+  /** label for aria-label */
+  label: PropTypes.string.isRequired,
 };
 
 ElevatorPanel.defaultProps = {
