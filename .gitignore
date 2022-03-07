@@ -24,3 +24,5 @@ yarn-error.log*
 
 # platform-dependent build script
 elevator_docker
+
+DESIGN.md
