@@ -31,10 +31,12 @@ class ElevatorDisplay extends React.Component {
     this.state = {
       /** elevator button size */
       buttonSize: 64,
+      /** floor button activity state */
       floorButtons: new Array(this.props.floors.length).fill({
         up: false,
         down: false,
       }),
+      /** car button activity state */
       carButtons: new Array(this.props.floors.length).fill(false),
       elevatorPosition: 0,
     };

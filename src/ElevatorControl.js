@@ -302,7 +302,7 @@ class ElevatorControl {
       this.moveCar(this.getTravelDirection(stop));
     }
 
-    console.log(`Stopping at floor '${this.floors[this.car.location]}'`);
+    console.log(`Stopping at floor ${this.floors[this.car.location]}`);
     await this.sleep(this.doorInterval);
     this.handleElevatorCallBack({
       source: 'car',
@@ -390,7 +390,7 @@ class ElevatorControl {
       this.car.location--;
     }
     this.positionCallBack(this.car.location);
-    console.log(`Elevator at floor '${this.floors[this.car.location]}'`);
+    console.log(`Elevator at floor ${this.floors[this.car.location]}`);
 
     // if a request has been added at the current location, handle it. The
     // request registration process guarantees it is in the correct direction.
