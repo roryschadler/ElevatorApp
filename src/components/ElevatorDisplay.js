@@ -46,6 +46,8 @@ class ElevatorDisplay extends React.Component {
       initialPosition: this.state.elevatorPosition,
       buttonCallBack: this.handleElevatorCallBack,
       positionCallBack: this.handleElevatorPosition,
+      travelInterval: 5000,
+      floorInterval: 10000,
     });
   }
 
