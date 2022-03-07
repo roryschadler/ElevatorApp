@@ -114,6 +114,13 @@ class ElevatorDisplay extends React.Component {
       />
     );
 
+    const trackerPanel = (
+      <ElevatorTracker
+        floors={this.props.floors}
+        position={this.state.elevatorPosition}
+      />
+    );
+
     if (this.props.value === 'all') {
       // full system display
       return (
@@ -123,10 +130,7 @@ class ElevatorDisplay extends React.Component {
           spacing={{ xs: 1, md: 3 }}
         >
           <Grid xs={2} item>
-            <ElevatorTracker
-              floors={this.props.floors}
-              position={this.state.elevatorPosition}
-            />
+            {trackerPanel}
           </Grid>
           <Grid xs={3} item>
             {carPanel}
@@ -140,8 +144,17 @@ class ElevatorDisplay extends React.Component {
         </Grid>
       );
     } else if (this.props.value === 'car') {
-      // elevator car only
-      return carPanel;
+      // elevator car and tracker only
+      return (
+        <Grid container columns={{ xs: 4, sm: 8 }} spacing={1}>
+          <Grid xs={2} item>
+            {trackerPanel}
+          </Grid>
+          <Grid xs={3} item>
+            {carPanel}
+          </Grid>
+        </Grid>
+      );
     } else {
       // floor panel only
       return floorButtons[this.props.floors.indexOf(this.props.value)];
