@@ -41,12 +41,12 @@ class ElevatorDisplay extends React.Component {
     this.handleElevatorRequest = this.handleElevatorRequest.bind(this);
     this.handleElevatorCallBack = this.handleElevatorCallBack.bind(this);
     this.handleElevatorPosition = this.handleElevatorPosition.bind(this);
-    this.controller = new ElevatorControl(
-      this.props.floors,
-      this.state.elevatorPosition,
-      this.handleElevatorCallBack,
-      this.handleElevatorPosition
-    );
+    this.controller = new ElevatorControl({
+      floors: this.props.floors,
+      initialPosition: this.state.elevatorPosition,
+      buttonCallBack: this.handleElevatorCallBack,
+      positionCallBack: this.handleElevatorPosition,
+    });
   }
 
   handleElevatorRequest(destination, currentFloor) {

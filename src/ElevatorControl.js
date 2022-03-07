@@ -33,6 +33,7 @@ const DOWN = -1;
  * @example
  * const floors = ['L', '1', '2', '3'];
  * const buttonCallBack = (buttonChange) => console.log(buttonChange);
+ * const positionCallBack = (position) => console.log(position);
  * const travelInterval = 1000;
  * const floorInterval = 2000;
  * const controller = new ElevatorControl(
@@ -51,19 +52,19 @@ class ElevatorControl {
    *   the floors array.
    * @param {buttonCallBack} [buttonCallBack] - Function to call on receiving a
    *   request and on elevator arrival
-   * @param {buttonCallBack} [positionCallBack] - Function to call when the
+   * @param {positionCallBack} [positionCallBack] - Function to call when the
    *   elevator moves
    * @param {number} [travelInterval] - Time between floors in ms
    * @param {number} [floorInterval] - Time to stop at a floor in ms
    */
-  constructor(
+  constructor({
     floors,
     initialPosition,
     buttonCallBack,
     positionCallBack,
     travelInterval,
-    floorInterval
-  ) {
+    floorInterval,
+  }) {
     this.floors = floors;
     this.buttonCallBack = buttonCallBack || (() => {});
     this.positionCallBack = positionCallBack || (() => {});
@@ -117,6 +118,12 @@ class ElevatorControl {
    */
 
   /**
+   * This callback informs the caller of the elevator's current position.
+   * @callback positionCallBack
+   * @param {number} position - Elevator's current position
+   */
+
+  /**
    * Handles the given elevator callback, providing the correct information to
    * toggle button lights.
    * @param {Object} request - Elevator request object
@@ -133,7 +140,7 @@ class ElevatorControl {
   handleElevatorCallBack({ source, destination, direction, arrival }) {
     if (source === 'car') {
       if (arrival) {
-        // turn off both car button and floor button
+        // We have arrived at a floor. Turn off both car button and floor button
         this.buttonCallBack({
           type: 'car',
           location: destination,
@@ -146,7 +153,7 @@ class ElevatorControl {
           active: false,
         });
       } else {
-        // responding to car button press, not arrival
+        // Responding to car button press, not arrival. Turn on the car button
         this.buttonCallBack({
           type: 'car',
           location: destination,
@@ -154,7 +161,8 @@ class ElevatorControl {
         });
       }
     } else if (source === 'floor') {
-      // responding to floor button press
+      // Responding to floor button press. Turn on the floor button in the right
+      // direction
       this.buttonCallBack({
         type: 'floor',
         location: destination,
@@ -176,6 +184,7 @@ class ElevatorControl {
       currentFloor !== undefined &&
       (destination === 'up' || destination === 'down')
     ) {
+      // Floor request
       request = {
         source: 'floor',
         direction: destination,
@@ -188,6 +197,7 @@ class ElevatorControl {
         }`
       );
     } else {
+      // car request
       request = {
         source: 'car',
         destination: this.floors.indexOf(destination),
@@ -207,7 +217,7 @@ class ElevatorControl {
     // car idle, apply new job right away
     if (!this.car.busy) {
       this.car.busy = true;
-      this.car.direction = this.getTravelDirection(request.destination);
+      this.car.direction = this.getTravelDirection(request);
       this.currentRequests.add(request);
       this.tick();
     } else {
@@ -264,17 +274,17 @@ class ElevatorControl {
             } else if (this.activeRequest.travelDirection === DOWN) {
               this.pendingDownRequests.add(this.activeRequest);
             }
-            this.abortActiveRequest();
+            // abort current job, it's been added to the pending queue
+            this.abortEmitter.emit('abort');
+            this.activeRequest = { abort: true };
           }
           this.currentRequests.add(request);
         }
       }
     }
-  }
-
-  abortActiveRequest() {
-    this.abortEmitter.emit('abort');
-    this.activeRequest = { abort: true };
+    // request has been registered with no errors. remove AbortEmitter listeners
+    // to avoid memory leak warnings
+    this.abortEmitter.removeAllListeners();
   }
 
   /**
@@ -289,8 +299,9 @@ class ElevatorControl {
         // timer ended by abort, stop handling this request
         return;
       }
-      this.moveCar(this.getTravelDirection(stop.destination));
+      this.moveCar(this.getTravelDirection(stop));
     }
+
     console.log(`Stopping at floor '${this.floors[this.car.location]}'`);
     await this.sleep(this.doorInterval);
     this.handleElevatorCallBack({
@@ -299,16 +310,25 @@ class ElevatorControl {
       direction: this.car.direction === UP ? 'up' : 'down',
       arrival: true,
     });
-    await this.sleep(this.doorInterval + this.floorInterval);
+    await this.sleep(this.floorInterval + this.doorInterval);
   }
 
   /**
    * Returns the direction of the target floor from the elevator car.
-   * @param {number} targetFloor - target floor index
+   * @param {Object} request - Request to get direction for
+   * @param {(UP|DOWN)} request.destination - destination to get direction for
+   * @param {(UP|DOWN)} [request.travelDirection] - User's requested direction,
+   *   may be different than the direction to the destination
    * @returns UP or DOWN
    */
-  getTravelDirection(targetFloor) {
-    return targetFloor > this.car.location ? UP : DOWN;
+  getTravelDirection(request) {
+    // if the car is already at the destination, respond with the user's
+    // requested direction instead
+    if (request.destination === this.car.location && request.travelDirection) {
+      return request.travelDirection;
+    } else {
+      return request.destination > this.car.location ? UP : DOWN;
+    }
   }
 
   /**
@@ -371,6 +391,9 @@ class ElevatorControl {
     }
     this.positionCallBack(this.car.location);
     console.log(`Elevator at floor '${this.floors[this.car.location]}'`);
+
+    // if a request has been added at the current location, handle it. The
+    // request registration process guarantees it is in the correct direction.
     const currentLocation = { destination: this.car.location };
     if (this.currentRequests.has(currentLocation)) {
       await this.handleRequest(this.currentRequests.get(currentLocation));
@@ -386,6 +409,7 @@ class ElevatorControl {
   sleep(ms) {
     return new Promise((resolve) => {
       let currentTimeoutID = setTimeout(resolve, ms);
+      // allow for mid-sleep abort if called
       this.abortEmitter.on('abort', () => {
         clearTimeout(currentTimeoutID);
         resolve();
