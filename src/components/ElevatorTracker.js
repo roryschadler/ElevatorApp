@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Paper, Stack } from '@mui/material';
+import { Button, Paper, Stack, Grid } from '@mui/material';
 import PropTypes from 'prop-types';
 
 /**
@@ -18,20 +18,27 @@ import PropTypes from 'prop-types';
 function ElevatorTracker({ floors, position }) {
   return (
     <Paper aria-label="Elevator tracking display">
-      <Stack direction="column-reverse">
-        {floors.map((floor, index) => (
-          <Button
-            sx={{
-              bgcolor: index === position ? 'primary.light' : 'primary',
-            }}
-            // variant="outlined"
-            disableRipple
-            key={index}
-          >
-            {floor}
-          </Button>
-        ))}
-      </Stack>
+      <Grid container spacing={1} direction="column" justifyItems="center">
+        <Grid item sx={{ textAlign: 'center' }}>
+          Elevator Location
+        </Grid>
+        <Grid item>
+          <Stack direction="column-reverse">
+            {floors.map((floor, index) => (
+              <Button
+                sx={{
+                  bgcolor: index === position ? 'primary.light' : 'primary',
+                }}
+                disableFocusRipple
+                disableRipple
+                key={index}
+              >
+                {floor}
+              </Button>
+            ))}
+          </Stack>
+        </Grid>
+      </Grid>
     </Paper>
   );
 }
