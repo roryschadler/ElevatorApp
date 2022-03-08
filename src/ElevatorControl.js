@@ -113,7 +113,7 @@ class ElevatorControl {
    *   corresponding to the request location/destination, or the arrival floor
    * @param {string} [buttonChange.button] - If the type is 'floor', this
    *   contains 'up' or 'down' depending on which button should change.
-   * @param {boolean} buttonchange.active - `true` if button should be active,
+   * @param {boolean} buttonChange.active - `true` if button should be active,
    *   `false` if not
    */
 
@@ -264,7 +264,7 @@ class ElevatorControl {
         } else {
           // floor is upcoming
           if (
-            this.activeRequest &&
+            this.activeRequest?.travelDirection &&
             this.activeRequest.travelDirection !== this.car.direction
           ) {
             // active request would turn the elevator around before fulfilling
